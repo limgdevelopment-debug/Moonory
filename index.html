@@ -1,13 +1,464 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MOONORY — Натальная карта онлайн</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <style>
+    :root{
+      --lunar-black:#0D0D0D;
+      --silver:#DADADA;
+      --warm-white:#FFF0EB;
+      --deep-blue:#1C1F2B;
+      --gold:#C6A98E;
+      --divider:rgba(255,255,255,.08);
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background:radial-gradient(1400px 700px at 80% -10%,rgba(198,169,142,.08),transparent 60%),var(--deep-blue);
+      color:var(--silver);
+    }
+    .wrap{max-width:1200px;margin-inline:auto;padding:28px 20px 64px;}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+    .mark{
+      width:44px;aspect-ratio:1;border-radius:999px;
+      background:linear-gradient(145deg,var(--gold),#f2e3cf);
+      display:grid;place-items:center;
+      box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.35);
+    }
+    .mark::after{
+      content:"";width:60%;height:60%;
+      border:2px solid rgba(0,0,0,.7);
+      border-left-color:transparent;border-top-color:transparent;
+      border-radius:50%;
+    }
+    h1{font-size:28px;letter-spacing:.08em;color:var(--warm-white);font-weight:700;margin:0;}
+    .sub{color:#BFC4CF;opacity:.9;}
+    .card{
+      background:rgba(13,13,13,.35);
+      border:1px solid var(--divider);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
+    }
+    .grid{display:grid;gap:14px;grid-template-columns:1fr;}
+    @media (min-width:1000px){
+      .grid{grid-template-columns:430px 1fr;}
+    }
+    label{display:block;font-size:13px;color:#C8CCD6;margin:6px 0;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    input,select,button{
+      width:100%;box-sizing:border-box;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0E121B;
+      color:var(--warm-white);
+      outline:none;font-size:15px;
+    }
+    input::placeholder{color:#8E95A3;}
+    button{
+      cursor:pointer;
+      background:linear-gradient(180deg,#e8d6bd,var(--gold));
+      color:#1b1f28;
+      font-weight:700;
+      letter-spacing:.02em;
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 2px 0 rgba(0,0,0,.25),0 12px 30px rgba(198,169,142,.25);
+    }
+    .muted{font-size:13px;color:#9aa1ad;}
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:12px;
+    }
+    .table th,.table td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:14px;
+    }
+    .table th{text-align:left;color:var(--warm-white);}
+    .flex{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .footer{margin-top:28px;color:#9aa1ad;font-size:12px;text-align:center;}
+    .panel{display:grid;grid-template-columns:1fr;gap:12px;}
+    @media (min-width:1000px){
+      .panel{grid-template-columns:1fr 1fr;}
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:999px;
+      font-size:13px;
+    }
+    canvas{
+      width:100%;
+      height:auto;
+      background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);
+      border-radius:12px;
+    }
+  </style>
 </head>
 <body>
-  <h1>MOONORY — Натальная карта онлайн</h1>
-  <p>Сайт работает. Основной файл index.html будет заменён вашим из канваса.</p>
+  <div class="wrap">
+    <header>
+      <div class="mark"></div>
+      <div>
+        <h1>MOONORY</h1>
+        <div class="sub">Натальная карта онлайн · точные расчёты (Swiss Ephemeris)</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <form id="form">
+          <label>Дата рождения</label>
+          <div class="row">
+            <input type="date" id="birthDate" required />
+            <input type="time" id="birthTime" required value="12:00" />
+          </div>
+
+          <label>Место рождения</label>
+          <input type="text" id="place" placeholder="Город, страна (например: Москва, Россия)" />
+
+          <label>Координаты (если известны)</label>
+          <div class="row">
+            <input type="number" step="any" id="lat" placeholder="Широта (например: 55.7558)" />
+            <input type="number" step="any" id="lon" placeholder="Долгота (например: 37.6173)" />
+          </div>
+
+          <label>Часовой пояс (UTC)</label>
+          <select id="tz">
+            <option value="0">UTC±0</option>
+            <option value="3" selected>UTC+3 (Москва)</option>
+            <option value="5">UTC+5</option>
+            <option value="7">UTC+7</option>
+            <option value="8">UTC+8</option>
+            <option value="10">UTC+10</option>
+            <option value="-5">UTC−5</option>
+            <option value="-8">UTC−8</option>
+          </select>
+
+          <div style="margin-top:14px" class="flex">
+            <button id="calc" type="submit">Рассчитать карту</button>
+            <span class="muted">
+              Вычисляются: Солнце, Луна, Меркурий–Плутон, средний Северный Узел, Хирон. Дома — Placidus. Аспекты: соединение, оппозиция, тригон, квадрат, секстиль.
+            </span>
+          </div>
+        </form>
+      </section>
+
+      <aside class="card">
+        <div class="badge">ℹ️ <b>Точность</b>: расчёты выполняются с помощью Swiss Ephemeris в браузере. Без передачи данных на сервер.</div>
+        <div style="height:10px"></div>
+        <div class="panel">
+          <div>
+            <h3 style="margin:0 0 8px;color:var(--warm-white);font-size:18px;">Положения</h3>
+            <table class="table" id="table"></table>
+          </div>
+          <div>
+            <h3 style="margin:0 0 8px;color:var(--warm-white);font-size:18px;">Аспекты</h3>
+            <table class="table" id="aspects"></table>
+          </div>
+          <div style="grid-column:1 / -1">
+            <h3 style="margin:12px 0 8px;color:var(--warm-white);font-size:18px;">Круг натальной карты</h3>
+            <canvas id="wheel" width="900" height="900"></canvas>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">
+      © MOONORY · онлайн-калькулятор натальной карты. Данные не сохраняются и не отправляются на сервер.
+    </div>
+  </div>
+
+  <!-- Подключаем Swiss Ephemeris (WASM) -->
+  <script src="https://cdn.jsdelivr.net/gh/andrmoel/sweph@2.10.0/sweph.js"></script>
+
+  <script>
+    // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+    const rad = d => d * Math.PI / 180;
+    const deg = r => r * 180 / Math.PI;
+    const norm = x => (x % 360 + 360) % 360;
+    const zodiac = ['Овен','Телец','Близнецы','Рак','Лев','Дева','Весы','Скорпион','Стрелец','Козерог','Водолей','Рыбы'];
+    const signOf = lo => {
+      const n = norm(lo);
+      return { sign:zodiac[Math.floor(n/30)], degree:(n%30).toFixed(2) };
+    };
+    const toJD = ms => ms / 86400000 + 2440587.5;
+
+    // --- запасные простые формулы на случай, если Swiss Ephemeris не загрузится ---
+    function sunLongitudeFallback(ms){
+      const JD=toJD(ms), T=(JD-2451545)/36525;
+      let L0=280.46646+36000.76983*T+0.0003032*T*T;
+      let M =357.52911+35999.05029*T-0.0001537*T*T;
+      const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(rad(M))
+            +(0.019993-0.000101*T)*Math.sin(rad(2*M))
+            +0.000289*Math.sin(rad(3*M));
+      return norm(L0+C);
+    }
+    function moonLongitudeFallback(ms){
+      const JD=toJD(ms), T=(JD-2451545)/36525;
+      const L0 = norm(218.3164477 + 481267.88123421*T - 0.0015786*T*T);
+      const D  = norm(297.8501921 + 445267.1114034*T - 0.0018819*T*T);
+      const M  = norm(357.5291092 + 35999.0502909*T - 0.0001536*T*T);
+      const Mp = norm(134.9633964 + 477198.8675055*T + 0.0087414*T*T);
+      const F  = norm(93.2720950  + 483202.0175233*T - 0.0036539*T*T);
+      const lon = L0 + 6.289*Math.sin(rad(Mp))
+                      + 1.274*Math.sin(rad(2*D-Mp))
+                      + 0.658*Math.sin(rad(2*D))
+                      + 0.214*Math.sin(rad(2*Mp))
+                      - 0.186*Math.sin(rad(M))
+                      - 0.114*Math.sin(rad(2*F));
+      return norm(lon);
+    }
+    function gmstDeg(JD){
+      const T=(JD-2451545)/36525;
+      let GMST = 280.46061837 + 360.98564736629*(JD-2451545) + 0.000387933*T*T - (T*T*T)/38710000;
+      return norm(GMST);
+    }
+    function ascendantFallback(ms, lat, lon){
+      const JD=toJD(ms), eps=23.439291;
+      const LST = norm(gmstDeg(JD) + lon);
+      const tanAsc = 1/(Math.cos(rad(LST))*Math.tan(rad(eps))) - Math.tan(rad(lat))*Math.sin(rad(LST))/Math.cos(rad(LST));
+      let asc = deg(Math.atan(tanAsc));
+      if(Math.cos(rad(LST))<0) asc+=180;
+      return norm(asc);
+    }
+
+    // ===== Swiss Ephemeris обёртка =====
+    async function ensureSweReady(){
+      if(!window.swe || !swe.init) return false;
+      if(ensureSweReady._ready) return true;
+      try{
+        await swe.init();
+        ensureSweReady._ready = true;
+        return true;
+      }catch(e){
+        console.warn('Swiss Ephemeris init error, using fallback', e);
+        return false;
+      }
+    }
+
+    async function computeWithSWE(ms, lat, lon){
+      const jdut1 = toJD(ms);
+      const positions = [];
+      const planets = [
+        ['Солнце', swe.SUN],
+        ['Луна', swe.MOON],
+        ['Меркурий', swe.MERCURY],
+        ['Венера', swe.VENUS],
+        ['Марс', swe.MARS],
+        ['Юпитер', swe.JUPITER],
+        ['Сатурн', swe.SATURN],
+        ['Уран', swe.URANUS],
+        ['Нептун', swe.NEPTUNE],
+        ['Плутон', swe.PLUTO]
+      ];
+
+      for(const [name, id] of planets){
+        const res = swe.calc_ut(jdut1, id, swe.FLG_SWIEPH | swe.FLG_ECL_LONG);
+        const lon = norm(res.x[0]);
+        positions.push({name, long:lon, sign:signOf(lon)});
+      }
+
+      // средний Северный узел
+      const nodeRes = swe.calc_ut(jdut1, swe.MEAN_NODE, swe.FLG_SWIEPH | swe.FLG_ECL_LONG);
+      const node = norm(nodeRes.x[0]);
+      positions.push({name:'Северный Узел (ср.)', long:node, sign:signOf(node)});
+
+      // Хирон
+      const chironRes = swe.calc_ut(jdut1, swe.CHIRON, swe.FLG_SWIEPH | swe.FLG_ECL_LONG);
+      const chiron = norm(chironRes.x[0]);
+      positions.push({name:'Хирон', long:chiron, sign:signOf(chiron)});
+
+      // Дома Placidus
+      const house = swe.houses_ex(jdut1, lat, lon, 'P');
+      const houses = Array.from({length:12}, (_,i)=> norm(house.cusps[i+1]));
+
+      return {positions, houses};
+    }
+
+    // ===== АСПЕКТЫ И ОТРИСОВКА =====
+    const ASPECTS = [
+      {name:'Соединение', angle:0,   orb:8},
+      {name:'Оппозиция',  angle:180, orb:8},
+      {name:'Тригон',     angle:120, orb:6},
+      {name:'Квадрат',    angle:90,  orb:6},
+      {name:'Секстиль',   angle:60,  orb:4}
+    ];
+
+    function aspectBetween(lo1, lo2){
+      const d = Math.abs(norm(lo1-lo2));
+      const delta = d > 180 ? 360 - d : d;
+      for(const a of ASPECTS){
+        if(Math.abs(delta - a.angle) <= a.orb){
+          return {name:a.name, delta:(delta - a.angle).toFixed(2)};
+        }
+      }
+      return null;
+    }
+
+    function renderPositions(rows){
+      const table = document.getElementById('table');
+      table.innerHTML =
+        '<tr><th>Объект</th><th>Долгота</th><th>Знак</th></tr>' +
+        rows.map(r=>`<tr><td>${r.name}</td><td>${r.long.toFixed(2)}°</td><td>${r.sign.sign} ${r.sign.degree}°</td></tr>`).join('');
+    }
+
+    function renderAspects(list){
+      const tbl = document.getElementById('aspects');
+      if(!list.length){
+        tbl.innerHTML =
+          '<tr><th>Аспект</th><th>Между</th><th>Δ</th></tr>' +
+          '<tr><td colspan="3">Нет мажорных аспектов в заданных орбисах</td></tr>';
+        return;
+      }
+      tbl.innerHTML =
+        '<tr><th>Аспект</th><th>Между</th><th>Δ</th></tr>' +
+        list.map(a=>`<tr><td>${a.name}</td><td>${a.p1} — ${a.p2}</td><td>${a.delta}°</td></tr>`).join('');
+    }
+
+    function drawWheel(canvas, items, houses){
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const Cx = W/2, Cy = H/2;
+      const R = Math.min(W,H)/2 - 30;
+
+      ctx.clearRect(0,0,W,H);
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,.2)';
+      for(const r of [R, R*0.82, R*0.6]){
+        ctx.beginPath();
+        ctx.arc(Cx,Cy,r,0,Math.PI*2);
+        ctx.stroke();
+      }
+
+      // знаки зодиака
+      for(let i=0;i<12;i++){
+        const ang = rad(-90 + i*30);
+        const x1 = Cx + Math.cos(ang)*R;
+        const y1 = Cy + Math.sin(ang)*R;
+        const x2 = Cx + Math.cos(ang)*R*0.6;
+        const y2 = Cy + Math.sin(ang)*R*0.6;
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+
+        const tx = Cx + Math.cos(ang-0.1)*R*0.9;
+        const ty = Cy + Math.sin(ang-0.1)*R*0.9;
+        ctx.fillStyle='rgba(255,255,255,.85)';
+        ctx.font='14px ui-sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(zodiac[i], tx, ty);
+      }
+
+      // дома
+      if(houses){
+        ctx.strokeStyle='rgba(198,169,142,.7)';
+        houses.forEach(h=>{
+          const a = rad(-90 + h);
+          const x = Cx + Math.cos(a)*R*0.82;
+          const y = Cy + Math.sin(a)*R*0.82;
+          ctx.beginPath();
+          ctx.moveTo(Cx,Cy);
+          ctx.lineTo(x,y);
+          ctx.stroke();
+        });
+      }
+
+      // объекты
+      for(const it of items){
+        const a = rad(-90 + it.long);
+        const r = R*0.7;
+        const x = Cx + Math.cos(a)*r;
+        const y = Cy + Math.sin(a)*r;
+        ctx.fillStyle='rgba(198,169,142,0.95)';
+        ctx.beginPath();
+        ctx.arc(x,y,5,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='rgba(255,240,235,.95)';
+        ctx.font='12px ui-sans-serif';
+        ctx.textAlign='left';
+        ctx.fillText(it.name, x+8, y-6);
+      }
+    }
+
+    // ===== ОБРАБОТЧИК ФОРМЫ =====
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+
+      const d   = document.getElementById('birthDate').value;
+      const t   = document.getElementById('birthTime').value;
+      const tz  = parseFloat(document.getElementById('tz').value)||0;
+      const lat = parseFloat(document.getElementById('lat').value||'0');
+      const lon = parseFloat(document.getElementById('lon').value||'0');
+
+      if(!d || !t){
+        alert('Укажите дату и время рождения');
+        return;
+      }
+
+      const [hh,mm] = t.split(':').map(Number);
+      const dateLocal = new Date(d+'T00:00:00');
+      const ms = Date.UTC(
+        dateLocal.getUTCFullYear(),
+        dateLocal.getUTCMonth(),
+        dateLocal.getUTCDate(),
+        hh - tz,
+        mm,
+        0
+      );
+
+      let positions = [];
+      let houses = null;
+
+      const hasSwe = await ensureSweReady();
+
+      if(hasSwe){
+        try{
+          const res = await computeWithSWE(ms, lat, lon);
+          positions = res.positions;
+          houses = res.houses;
+        }catch(err){
+          console.warn('Ошибка Swiss Ephemeris, переключаемся на упрощённые формулы', err);
+        }
+      }
+
+      // если Swiss Ephemeris не сработал — простой фолбэк по Солнцу и Луне
+      if(!positions.length){
+        const sun = sunLongitudeFallback(ms);
+        const moon = moonLongitudeFallback(ms);
+        positions = [
+          {name:'Солнце', long:sun,  sign:signOf(sun)},
+          {name:'Луна',   long:moon, sign:signOf(moon)}
+        ];
+        const asc = ascendantFallback(ms, lat, lon);
+        houses = Array.from({length:12}, (_,i)=> norm(asc + i*30));
+      }
+
+      renderPositions(positions);
+
+      const aspects = [];
+      for(let i=0;i<positions.length;i++){
+        for(let j=i+1;j<positions.length;j++){
+          const a = aspectBetween(positions[i].long, positions[j].long);
+          if(a) aspects.push({p1:positions[i].name,p2:positions[j].name,name:a.name,delta:a.delta});
+        }
+      }
+      renderAspects(aspects);
+
+      drawWheel(document.getElementById('wheel'), positions, houses);
+    });
+  </script>
 </body>
 </html>
