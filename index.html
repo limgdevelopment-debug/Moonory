@@ -1,269 +1,624 @@
-<script type="module">
-  import SwissEph from 'https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src/swisseph.js';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MOONORY — Натальная карта онлайн</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <style>
+    :root{
+      --lunar-black:#0D0D0D;
+      --silver:#DADADA;
+      --warm-white:#FFF0EB;
+      --deep-blue:#1C1F2B;
+      --gold:#C6A98E;
+      --divider:rgba(255,255,255,.08);
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background:radial-gradient(1400px 700px at 80% -10%,rgba(198,169,142,.08),transparent 60%),var(--deep-blue);
+      color:var(--silver);
+    }
+    .wrap{max-width:1200px;margin-inline:auto;padding:28px 20px 64px;}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+    .mark{
+      width:44px;aspect-ratio:1;border-radius:999px;
+      background:linear-gradient(145deg,var(--gold),#f2e3cf);
+      display:grid;place-items:center;
+      box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.35);
+    }
+    .mark::after{
+      content:"";width:60%;height:60%;
+      border:2px solid rgba(0,0,0,.7);
+      border-left-color:transparent;border-top-color:transparent;
+      border-radius:50%;
+    }
+    h1{font-size:28px;letter-spacing:.08em;color:var(--warm-white);font-weight:700;margin:0;}
+    .sub{color:#BFC4CF;opacity:.9;}
+    .card{
+      background:rgba(13,13,13,.35);
+      border:1px solid var(--divider);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 20px 50px rgba(0,0,0,.35);
+    }
+    .grid{display:grid;gap:14px;grid-template-columns:1fr;}
+    @media (min-width:1000px){
+      .grid{grid-template-columns:430px 1fr;}
+    }
+    label{display:block;font-size:13px;color:#C8CCD6;margin:6px 0;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    input,select,button{
+      width:100%;box-sizing:border-box;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:#0E121B;
+      color:var(--warm-white);
+      outline:none;font-size:15px;
+    }
+    input::placeholder{color:#8E95A3;}
+    button{
+      cursor:pointer;
+      background:linear-gradient(180deg,#e8d6bd,var(--gold));
+      color:#1b1f28;
+      font-weight:700;
+      letter-spacing:.02em;
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 2px 0 rgba(0,0,0,.25),0 12px 30px rgba(198,169,142,.25);
+    }
+    .btn-secondary{
+      background:transparent;
+      color:var(--silver);
+      border-style:dashed;
+      box-shadow:none;
+      font-weight:500;
+      padding:8px 10px;
+      font-size:13px;
+    }
+    .btn-secondary[disabled]{
+      opacity:.6;
+      cursor:default;
+    }
+    .muted{font-size:13px;color:#9aa1ad;}
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:12px;
+    }
+    .table th,.table td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:14px;
+      vertical-align:top;
+    }
+    .table th{text-align:left;color:var(--warm-white);}
+    .flex{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .footer{margin-top:28px;color:#9aa1ad;font-size:12px;text-align:center;}
+    .panel{display:grid;grid-template-columns:1fr;gap:12px;}
+    @media (min-width:1000px){
+      .panel{grid-template-columns:1fr 1fr;}
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:999px;
+      font-size:13px;
+    }
+    canvas{
+      width:100%;
+      height:auto;
+      background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);
+      border-radius:12px;
+    }
+    #interpretations{
+      font-size:14px;
+      line-height:1.6;
+    }
+    #interpretations p{margin:0 0 10px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark"></div>
+      <div>
+        <h1>MOONORY</h1>
+        <div class="sub">Натальная карта онлайн · точные расчёты (Swiss Ephemeris)</div>
+      </div>
+    </header>
 
-  // --- инициализация Swiss Ephemeris ---
-  const swe = new SwissEph();
-  await swe.initSwissEph();
+    <div class="grid">
+      <!-- ЛЕВАЯ КОЛОНКА: ФОРМА ВВОДА -->
+      <section class="card">
+        <form id="form">
+          <label>Дата рождения</label>
+          <div class="row">
+            <input type="date" id="birthDate" required />
+            <input type="time" id="birthTime" required value="12:00" />
+          </div>
 
-  // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
-  const rad = d => d * Math.PI / 180;
-  const norm = x => (x % 360 + 360) % 360;
-  const zodiac = ['Овен','Телец','Близнецы','Рак','Лев','Дева','Весы','Скорпион','Стрелец','Козерог','Водолей','Рыбы'];
+          <label>Место рождения</label>
+          <input type="text" id="place" placeholder="Город, страна (например: Москва, Россия)" />
 
-  const signOf = lo => {
-    const n = norm(lo);
-    return { sign:zodiac[Math.floor(n/30)], degree:(n%30).toFixed(2) };
-  };
+          <button type="button" id="geoBtn" class="btn-secondary" style="margin-top:6px;">
+            Определить координаты по городу
+          </button>
+          <div class="muted" style="margin-top:4px;">
+            Введите название города (и страны при необходимости), затем нажмите кнопку — широта и долгота заполнятся автоматически.
+          </div>
 
-  // Перевод локального времени в UT-часы
-  function toUtcHour(localHour, localMinute, tzOffset) {
-    const local = localHour + localMinute / 60;
-    return local - tzOffset;
-  }
+          <label style="margin-top:10px;">Координаты (если известны)</label>
+          <div class="row">
+            <input type="number" step="any" id="lat" placeholder="Широта (например: 55.7558)" />
+            <input type="number" step="any" id="lon" placeholder="Долгота (например: 37.6173)" />
+          </div>
 
-  // ===== ГЕОКОДЕР (оставляем как был) =====
-  async function geocodeCity(city){
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&accept-language=ru&q='
-                + encodeURIComponent(city);
-    const res = await fetch(url, { headers:{'Accept':'application/json'} });
-    if(!res.ok) throw new Error('Сервис геокодирования недоступен. Попробуйте позже.');
-    const data = await res.json();
-    if(!data.length) throw new Error('Город не найден. Попробуйте указать страну или регион.');
-    return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-  }
+          <label>Часовой пояс (UTC)</label>
+          <select id="tz">
+            <option value="0">UTC±0</option>
+            <option value="3" selected>UTC+3 (Москва)</option>
+            <option value="5">UTC+5</option>
+            <option value="6">UTC+6</option>
+            <option value="7">UTC+7</option>
+            <option value="8">UTC+8</option>
+            <option value="10">UTC+10</option>
+            <option value="-5">UTC−5</option>
+            <option value="-8">UTC−8</option>
+          </select>
 
-  async function handleGeoButton(){
-    const placeInput = document.getElementById('place');
-    const btn = document.getElementById('geoBtn');
-    const latInput = document.getElementById('lat');
-    const lonInput = document.getElementById('lon');
+          <div style="margin-top:14px" class="flex">
+            <button id="calc" type="submit">Рассчитать карту</button>
+            <span class="muted">
+              Вычисляются: Солнце, Луна, планеты, Asc, MC. Дома — Placidus. Аспекты: соединение, оппозиция, тригон, квадрат, секстиль.
+            </span>
+          </div>
+        </form>
+      </section>
 
-    const city = placeInput.value.trim();
-    if(!city){
-      alert('Введите название города, например: Москва или Сибай.');
-      return;
+      <!-- ПРАВАЯ КОЛОНКА: РЕЗУЛЬТАТЫ -->
+      <aside class="card">
+        <div class="badge">ℹ️ <b>Точность</b>: расчёты выполняются в браузере. Данные не передаются на сервер.</div>
+        <div style="height:10px"></div>
+
+        <!-- Позиции / Аспекты / Круг -->
+        <div class="panel">
+          <div>
+            <h3 style="margin:0 0 8px;color:var(--warm-white);font-size:18px;">Положения</h3>
+            <table class="table" id="table"></table>
+          </div>
+          <div>
+            <h3 style="margin:0 0 8px;color:var(--warm-white);font-size:18px;">Аспекты</h3>
+            <table class="table" id="aspects"></table>
+          </div>
+          <div style="grid-column:1 / -1">
+            <h3 style="margin:12px 0 8px;color:var(--warm-white);font-size:18px;">Круг натальной карты</h3>
+            <canvas id="wheel" width="900" height="900"></canvas>
+          </div>
+        </div>
+
+        <!-- Дома и интерпретация -->
+        <div style="margin-top:16px" class="panel">
+          <div>
+            <h3 style="margin:0 0 8px;color:var(--warm-white);font-size:18px;">Дома гороскопа</h3>
+            <table class="table" id="housesTable"></table>
+          </div>
+          <div>
+            <h3 style="margin:0 0 8px;color:var(--warm-white);font-size:18px;">Краткая интерпретация</h3>
+            <div id="interpretations" class="muted">
+              Заполните данные и нажмите «Рассчитать карту», чтобы увидеть интерпретацию.
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">
+      © MOONORY · онлайн-калькулятор натальной карты. Данные не сохраняются и не отправляются на сервер.
+    </div>
+  </div>
+
+  <!-- ОДИН СКРИПТ: SwissEph + логика сайта -->
+  <script type="module">
+    import SwissEph from 'https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src/swisseph.js';
+
+    // ==== ИНИЦИАЛИЗАЦИЯ SWISSEPH ====
+    const swe = new SwissEph();
+    await swe.initSwissEph();
+
+    // ==== БАЗОВАЯ МАТЕМАТИКА ====
+    const rad = d => d * Math.PI / 180;
+    const norm = x => (x % 360 + 360) % 360;
+    const zodiac = ['Овен','Телец','Близнецы','Рак','Лев','Дева','Весы','Скорпион','Стрелец','Козерог','Водолей','Рыбы'];
+
+    const signOf = lo => {
+      const n = norm(lo);
+      return { sign:zodiac[Math.floor(n/30)], degree:(n%30).toFixed(2) };
+    };
+
+    // перевод локального времени в UT-часы
+    function toUtcHour(localHour, localMinute, tzOffset) {
+      const local = localHour + localMinute / 60;
+      return local - tzOffset;
     }
 
-    const oldText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Определяем координаты...';
-
-    try{
-      const {lat, lon} = await geocodeCity(city);
-      latInput.value = lat.toFixed(4);
-      lonInput.value = lon.toFixed(4);
-    }catch(err){
-      alert(err.message || 'Не удалось определить координаты по этому городу.');
-    }finally{
-      btn.disabled = false;
-      btn.textContent = oldText;
+    // ==== ГЕОКОДЕР (координаты по городу) ====
+    async function geocodeCity(city){
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&accept-language=ru&q='
+                  + encodeURIComponent(city);
+      const res = await fetch(url, { headers:{'Accept':'application/json'} });
+      if(!res.ok) throw new Error('Сервис геокодирования недоступен. Попробуйте позже.');
+      const data = await res.json();
+      if(!data.length) throw new Error('Город не найден. Попробуйте указать страну или регион.');
+      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
     }
-  }
 
-  // ===== РЕНДЕР (твои функции почти без изменений) =====
-  const ASPECTS = [
-    {name:'Соединение', angle:0,   orb:8},
-    {name:'Оппозиция',  angle:180, orb:8},
-    {name:'Тригон',     angle:120, orb:6},
-    {name:'Квадрат',    angle:90,  orb:6},
-    {name:'Секстиль',   angle:60,  orb:4}
-  ];
+    async function handleGeoButton(){
+      const placeInput = document.getElementById('place');
+      const btn = document.getElementById('geoBtn');
+      const latInput = document.getElementById('lat');
+      const lonInput = document.getElementById('lon');
 
-  function aspectBetween(lo1, lo2){
-    const d = Math.abs(norm(lo1-lo2));
-    const delta = d > 180 ? 360 - d : d;
-    for(const a of ASPECTS){
-      if(Math.abs(delta - a.angle) <= a.orb){
-        return {name:a.name, delta:(delta - a.angle).toFixed(2)};
+      const city = placeInput.value.trim();
+      if(!city){
+        alert('Введите название города, например: Москва или Сибай.');
+        return;
+      }
+
+      const oldText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Определяем координаты...';
+
+      try{
+        const {lat, lon} = await geocodeCity(city);
+        latInput.value = lat.toFixed(4);
+        lonInput.value = lon.toFixed(4);
+      }catch(err){
+        alert(err.message || 'Не удалось определить координаты по этому городу.');
+      }finally{
+        btn.disabled = false;
+        btn.textContent = oldText;
       }
     }
-    return null;
-  }
 
-  function renderPositions(rows){
-    const table = document.getElementById('table');
-    table.innerHTML =
-      '<tr><th>Объект</th><th>Долгота</th><th>Знак</th><th>Дом</th></tr>' +
-      rows.map(r=>`<tr><td>${r.name}</td><td>${r.long.toFixed(2)}°</td><td>${r.sign.sign} ${r.sign.degree}°</td><td>${r.house ? r.house + ' дом' : '—'}</td></tr>`).join('');
-  }
-
-  function renderAspects(list){
-    const tbl = document.getElementById('aspects');
-    if(!list.length){
-      tbl.innerHTML =
-        '<tr><th>Аспект</th><th>Между</th><th>Δ</th></tr>' +
-        '<tr><td colspan="3">Нет мажорных аспектов в заданных орбисах</td></tr>';
-      return;
-    }
-    tbl.innerHTML =
-      '<tr><th>Аспект</th><th>Между</th><th>Δ</th></tr>' +
-      list.map(a=>`<tr><td>${a.name}</td><td>${a.p1} — ${a.p2}</td><td>${a.delta}°</td></tr>`).join('');
-  }
-
-  function drawWheel(canvas, items, houses){
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    const Cx = W/2, Cy = H/2;
-    const R = Math.min(W,H)/2 - 30;
-
-    ctx.clearRect(0,0,W,H);
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(255,255,255,.2)';
-    for(const r of [R, R*0.82, R*0.6]){
-      ctx.beginPath();
-      ctx.arc(Cx,Cy,r,0,Math.PI*2);
-      ctx.stroke();
-    }
-
-    for(let i=0;i<12;i++){
-      const ang = rad(-90 + i*30);
-      const x1 = Cx + Math.cos(ang)*R;
-      const y1 = Cy + Math.sin(ang)*R;
-      const x2 = Cx + Math.cos(ang)*R*0.6;
-      const y2 = Cy + Math.sin(ang)*R*0.6;
-      ctx.beginPath();
-      ctx.moveTo(x1,y1);
-      ctx.lineTo(x2,y2);
-      ctx.stroke();
-
-      const tx = Cx + Math.cos(ang-0.1)*R*0.9;
-      const ty = Cy + Math.sin(ang-0.1)*R*0.9;
-      ctx.fillStyle='rgba(255,255,255,.85)';
-      ctx.font='14px ui-sans-serif';
-      ctx.textAlign='center';
-      ctx.fillText(zodiac[i], tx, ty);
-    }
-
-    if(houses){
-      ctx.strokeStyle='rgba(198,169,142,.7)';
-      houses.forEach(h=>{
-        const a = rad(-90 + h);
-        const x = Cx + Math.cos(a)*R*0.82;
-        const y = Cy + Math.sin(a)*R*0.82;
-        ctx.beginPath();
-        ctx.moveTo(Cx,Cy);
-        ctx.lineTo(x,y);
-        ctx.stroke();
-      });
-    }
-
-    for(const it of items){
-      const a = rad(-90 + it.long);
-      const r = R*0.7;
-      const x = Cx + Math.cos(a)*r;
-      const y = Cy + Math.sin(a)*r;
-      ctx.fillStyle='rgba(198,169,142,0.95)';
-      ctx.beginPath();
-      ctx.arc(x,y,5,0,Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle='rgba(255,240,235,.95)';
-      ctx.font='12px ui-sans-serif';
-      ctx.textAlign='left';
-      ctx.fillText(it.name, x+8, y-6);
-    }
-  }
-
-  // --- тут оставь свои функции renderHousesTable / renderInterpretations (они ок) ---
-  // (их можно просто перенести в этот же скрипт без изменений)
-
-  // ===== ОБРАБОТЧИКИ =====
-  document.getElementById('geoBtn').addEventListener('click', handleGeoButton);
-
-  document.getElementById('form').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-
-    const d   = document.getElementById('birthDate').value;
-    const t   = document.getElementById('birthTime').value;
-    const tz  = parseFloat(document.getElementById('tz').value)||0;
-    const lat = parseFloat(document.getElementById('lat').value||'0');
-    const lon = parseFloat(document.getElementById('lon').value||'0');
-
-    if(!d || !t){
-      alert('Укажите дату и время рождения');
-      return;
-    }
-
-    const [year, month, day] = d.split('-').map(Number);
-    const [hh,mm] = t.split(':').map(Number);
-    const utcHour = toUtcHour(hh, mm, tz);
-    const jd = swe.julday(year, month, day, utcHour);
-
-    // --- планеты через SwissEph ---
-    const planetDefs = [
-      { name:'Солнце',   id:swe.SE_SUN },
-      { name:'Луна',     id:swe.SE_MOON },
-      { name:'Меркурий', id:swe.SE_MERCURY },
-      { name:'Венера',   id:swe.SE_VENUS },
-      { name:'Марс',     id:swe.SE_MARS },
-      { name:'Юпитер',   id:swe.SE_JUPITER },
-      { name:'Сатурн',   id:swe.SE_SATURN },
-      { name:'Уран',     id:swe.SE_URANUS },
-      { name:'Нептун',   id:swe.SE_NEPTUNE },
-      { name:'Плутон',   id:swe.SE_PLUTO }
+    // ==== АСПЕКТЫ ====
+    const ASPECTS = [
+      {name:'Соединение', angle:0,   orb:8},
+      {name:'Оппозиция',  angle:180, orb:8},
+      {name:'Тригон',     angle:120, orb:6},
+      {name:'Квадрат',    angle:90,  orb:6},
+      {name:'Секстиль',   angle:60,  orb:4}
     ];
 
-    const positions = [];
-
-    for (const p of planetDefs){
-      const res = swe.calc_ut(jd, p.id, swe.SEFLG_SWIEPH);
-      const lonDeg = res[0];
-      positions.push({
-        name: p.name,
-        long: lonDeg,
-        sign: signOf(lonDeg)
-      });
-    }
-
-    // --- дома Placidus ---
-    let housesRes;
-    if (typeof swe.houses === 'function'){
-      housesRes = swe.houses(jd, lat, lon, 'P');
-    } else if (typeof swe.houses_ex === 'function'){
-      housesRes = swe.houses_ex(jd, lat, lon, 'P');
-    }
-
-    let houses = null;
-    if (housesRes && housesRes.cusps){
-      // cusps[1..12]
-      houses = [];
-      for (let i=1;i<=12;i++){
-        houses.push(housesRes.cusps[i]);
-      }
-    }
-
-    // --- дом для каждой планеты ---
-    function findHouseFor(longitude) {
-      if (!houses) return null;
-      let lon = norm(longitude);
-      for (let i=0;i<12;i++){
-        let c1 = norm(houses[i]);
-        let c2 = norm(houses[(i+1)%12]);
-        if (c2 < c1) c2 += 360;
-        let l = lon;
-        if (l < c1) l += 360;
-        if (l >= c1 && l < c2) return i+1;
+    function aspectBetween(lo1, lo2){
+      const d = Math.abs(norm(lo1-lo2));
+      const delta = d > 180 ? 360 - d : d;
+      for(const a of ASPECTS){
+        if(Math.abs(delta - a.angle) <= a.orb){
+          return {name:a.name, delta:(delta - a.angle).toFixed(2)};
+        }
       }
       return null;
     }
 
-    positions.forEach(p=>{
-      p.house = findHouseFor(p.long);
-    });
+    // ==== ОТРИСОВКА ТАБЛИЦ / КРУГА ====
+    function renderPositions(rows){
+      const table = document.getElementById('table');
+      table.innerHTML =
+        '<tr><th>Объект</th><th>Долгота</th><th>Знак</th><th>Дом</th></tr>' +
+        rows.map(r=>`<tr><td>${r.name}</td><td>${r.long.toFixed(2)}°</td><td>${r.sign.sign} ${r.sign.degree}°</td><td>${r.house ? r.house + ' дом' : '—'}</td></tr>`).join('');
+    }
 
-    // --- аспекты ---
-    const aspects = [];
-    for(let i=0;i<positions.length;i++){
-      for(let j=i+1;j<positions.length;j++){
-        const a = aspectBetween(positions[i].long, positions[j].long);
-        if(a) aspects.push({p1:positions[i].name,p2:positions[j].name,name:a.name,delta:a.delta});
+    function renderAspects(list){
+      const tbl = document.getElementById('aspects');
+      if(!list.length){
+        tbl.innerHTML =
+          '<tr><th>Аспект</th><th>Между</th><th>Δ</th></tr>' +
+          '<tr><td colspan="3">Нет мажорных аспектов в заданных орбисах</td></tr>';
+        return;
+      }
+      tbl.innerHTML =
+        '<tr><th>Аспект</th><th>Между</th><th>Δ</th></tr>' +
+        list.map(a=>`<tr><td>${a.name}</td><td>${a.p1} — ${a.p2}</td><td>${a.delta}°</td></tr>`).join('');
+    }
+
+    function drawWheel(canvas, items, houses){
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const Cx = W/2, Cy = H/2;
+      const R = Math.min(W,H)/2 - 30;
+
+      ctx.clearRect(0,0,W,H);
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,.2)';
+      for(const r of [R, R*0.82, R*0.6]){
+        ctx.beginPath();
+        ctx.arc(Cx,Cy,r,0,Math.PI*2);
+        ctx.stroke();
+      }
+
+      for(let i=0;i<12;i++){
+        const ang = rad(-90 + i*30);
+        const x1 = Cx + Math.cos(ang)*R;
+        const y1 = Cy + Math.sin(ang)*R;
+        const x2 = Cx + Math.cos(ang)*R*0.6;
+        const y2 = Cy + Math.sin(ang)*R*0.6;
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+
+        const tx = Cx + Math.cos(ang-0.1)*R*0.9;
+        const ty = Cy + Math.sin(ang-0.1)*R*0.9;
+        ctx.fillStyle='rgba(255,255,255,.85)';
+        ctx.font='14px ui-sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText(zodiac[i], tx, ty);
+      }
+
+      if(houses){
+        ctx.strokeStyle='rgba(198,169,142,.7)';
+        houses.forEach(h=>{
+          const a = rad(-90 + h);
+          const x = Cx + Math.cos(a)*R*0.82;
+          const y = Cy + Math.sin(a)*R*0.82;
+          ctx.beginPath();
+          ctx.moveTo(Cx,Cy);
+          ctx.lineTo(x,y);
+          ctx.stroke();
+        });
+      }
+
+      for(const it of items){
+        const a = rad(-90 + it.long);
+        const r = R*0.7;
+        const x = Cx + Math.cos(a)*r;
+        const y = Cy + Math.sin(a)*r;
+        ctx.fillStyle='rgba(198,169,142,0.95)';
+        ctx.beginPath();
+        ctx.arc(x,y,5,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='rgba(255,240,235,.95)';
+        ctx.font='12px ui-sans-serif';
+        ctx.textAlign='left';
+        ctx.fillText(it.name, x+8, y-6);
       }
     }
 
-    renderPositions(positions);
-    renderAspects(aspects);
-    drawWheel(document.getElementById('wheel'), positions, houses);
-    renderHousesTable(houses);
-    renderInterpretations(positions, houses);
-  });
-</script>
+    // ==== ДОМА / ТЕКСТЫ ====
+    const houseTitles = {
+      1:'1 дом — личность и самоподача',
+      2:'2 дом — деньги, ресурсы, чувство ценности',
+      3:'3 дом — мышление, обучение, общение',
+      4:'4 дом — корни, семья, внутренний фундамент',
+      5:'5 дом — самовыражение, творчество, дети',
+      6:'6 дом — работа, режим, здоровье',
+      7:'7 дом — партнёрства и отношения',
+      8:'8 дом — кризисы, трансформация, ресурсы других людей',
+      9:'9 дом — смыслы, мировоззрение, дальние путешествия',
+      10:'10 дом — карьера, статус, образ взрослости',
+      11:'11 дом — друзья, сообщества, мечты о будущем',
+      12:'12 дом — бессознательное, уединение, завершения'
+    };
+
+    const planetRoles = {
+      'Солнце':'ядро личности, воля и ощущение «я есть»',
+      'Луна':'эмоции, базовое чувство безопасности и привычные реакции'
+    };
+
+    const signQualities = {
+      'Овен':'быструю, прямую, инициативную манеру действовать',
+      'Телец':'стабильность, терпение и опору на телесные ощущения',
+      'Близнецы':'гибкость ума, любопытство и потребность в обмене информацией',
+      'Рак':'чуткость, привязанность и желание создавать чувство дома',
+      'Лев':'яркость, креативность и стремление быть замеченным',
+      'Дева':'аналитичность, аккуратность и стремление всё улучшить',
+      'Весы':'ориентацию на партнёрство, баланс и эстетичность',
+      'Скорпион':'глубину чувств, максимализм и тягу к трансформации',
+      'Стрелец':'широкий взгляд, оптимизм и тягу к расширению горизонтов',
+      'Козерог':'серьёзность, ответственность и ориентацию на результат',
+      'Водолей':'нестандартность, независимость и интерес к будущему',
+      'Рыбы':'чувствительность, фантазию и стремление к слиянию с большим'
+    };
+
+    const houseAreas = {
+      1:'в теме личности и образа, с которым вы выходите в мир',
+      2:'в теме денег, личных ресурсов и самооценки',
+      3:'в сфере общения, обучения и контактов с близким окружением',
+      4:'в теме семьи, дома и внутренней опоры',
+      5:'в сфере творчества, удовольствий и отношений с детьми',
+      6:'в теме работы, полезности и заботы о теле',
+      7:'в партнёрствах — личных и деловых',
+      8:'в кризисах, глубокой близости и совместных ресурсах',
+      9:'в путешествиях, обучении и поиске личного смысла',
+      10:'в карьере, достижениях и общественной роли',
+      11:'в дружбе, командах и долгосрочных мечтах',
+      12:'во внутренней жизни, завершениях и темах, которые трудно контролировать разумом'
+    };
+
+    function renderHousesTable(houses){
+      const tbl = document.getElementById('housesTable');
+      if(!houses){
+        tbl.innerHTML =
+          '<tr><th>Дом</th><th>Долгота</th><th>Знак</th></tr>' +
+          '<tr><td colspan="3">Рассчитайте карту, чтобы увидеть положения домов.</td></tr>';
+        return;
+      }
+      const rows = [];
+      for(let i=0;i<12;i++){
+        const cusp = norm(houses[i]);
+        const s = signOf(cusp);
+        const title = houseTitles[i+1] || (i+1+' дом');
+        rows.push(
+          `<tr><td>${title}</td><td>${cusp.toFixed(2)}°</td><td>${s.sign} ${s.degree}°</td></tr>`
+        );
+      }
+      tbl.innerHTML =
+        '<tr><th>Дом</th><th>Долгота</th><th>Знак</th></tr>' +
+        rows.join('');
+    }
+
+    function generatePlanetText(p){
+      const h = p.house;
+      if(!h) return '';
+      const signName = p.sign.sign;
+      const houseTitle = houseTitles[h] || (h + ' дом');
+      const role = planetRoles[p.name] || 'эту часть психики';
+      const signText = signQualities[signName] || 'особую манеру проявляться';
+      const area = houseAreas[h] || 'определённую сферу жизни';
+
+      return `<p><b>${p.name} в ${signName}, ${houseTitle}</b><br>
+        ${p.name} показывает ${role}. В знаке ${signName.toLowerCase()} это даёт ${signText.toLowerCase()}. 
+        В ${area} эта энергия чувствуется особенно ярко, и со временем здесь проходят важные уроки и развороты судьбы.</p>`;
+    }
+
+    function renderInterpretations(positions, chartInfo){
+      const box = document.getElementById('interpretations');
+      if(!positions || !positions.length){
+        box.innerHTML = 'Заполните данные и нажмите «Рассчитать карту», чтобы увидеть интерпретацию.';
+        return;
+      }
+
+      let html = '';
+
+      if(chartInfo && chartInfo.ascDeg!=null && chartInfo.mcDeg!=null){
+        const asc = signOf(chartInfo.ascDeg).sign;
+        const mc  = signOf(chartInfo.mcDeg).sign;
+        html += `<p><b>Асцендент в ${asc}</b><br>
+          Асцендент описывает то, как вы выглядите для мира и как входите в новые ситуации. 
+          Знак ${asc.toLowerCase()} даёт свой стиль поведения и первую реакцию на всё новое.</p>`;
+        html += `<p><b>Середина неба (MC) в ${mc}</b><br>
+          MC показывает направление роста, карьеру и образ вашей зрелости. 
+          Через качества знака ${mc.toLowerCase()} вы строите долгосрочные цели и профессиональный путь.</p>`;
+      }
+
+      for(const p of positions){
+        html += generatePlanetText(p);
+      }
+
+      box.innerHTML = html;
+    }
+
+    // ==== ОБРАБОТЧИКИ ====
+    document.getElementById('geoBtn').addEventListener('click', handleGeoButton);
+
+    document.getElementById('form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+
+      const d   = document.getElementById('birthDate').value;
+      const t   = document.getElementById('birthTime').value;
+      const tz  = parseFloat(document.getElementById('tz').value)||0;
+      const lat = parseFloat(document.getElementById('lat').value||'0');
+      const lon = parseFloat(document.getElementById('lon').value||'0');
+
+      if(!d || !t){
+        alert('Укажите дату и время рождения');
+        return;
+      }
+
+      if(isNaN(lat) || isNaN(lon)){
+        alert('Укажите координаты (можно определить по городу).');
+        return;
+      }
+
+      const [year, month, day] = d.split('-').map(Number);
+      const [hh,mm] = t.split(':').map(Number);
+      const utcHour = toUtcHour(hh, mm, tz);
+      const jd = swe.julday(year, month, day, utcHour);
+
+      // --- планеты ---
+      const planetDefs = [
+        { name:'Солнце',   id:swe.SE_SUN },
+        { name:'Луна',     id:swe.SE_MOON },
+        { name:'Меркурий', id:swe.SE_MERCURY },
+        { name:'Венера',   id:swe.SE_VENUS },
+        { name:'Марс',     id:swe.SE_MARS },
+        { name:'Юпитер',   id:swe.SE_JUPITER },
+        { name:'Сатурн',   id:swe.SE_SATURN },
+        { name:'Уран',     id:swe.SE_URANUS },
+        { name:'Нептун',   id:swe.SE_NEPTUNE },
+        { name:'Плутон',   id:swe.SE_PLUTO }
+      ];
+
+      const positions = [];
+
+      for (const p of planetDefs){
+        const res = swe.calc_ut(jd, p.id, swe.SEFLG_SWIEPH);
+        const lonDeg = res[0];
+        positions.push({
+          name: p.name,
+          long: lonDeg,
+          sign: signOf(lonDeg)
+        });
+      }
+
+      // --- дома Placidus ---
+      let housesRes;
+      if (typeof swe.houses === 'function'){
+        housesRes = swe.houses(jd, lat, lon, 'P');
+      } else if (typeof swe.houses_ex === 'function'){
+        housesRes = swe.houses_ex(jd, lat, lon, 'P');
+      }
+
+      let houses = null;
+      let ascDeg = null;
+      let mcDeg  = null;
+
+      if (housesRes && housesRes.cusps){
+        houses = [];
+        for (let i=1;i<=12;i++){
+          houses.push(housesRes.cusps[i]); // 1..12
+        }
+        if (housesRes.ascmc){
+          ascDeg = housesRes.ascmc[0];
+          mcDeg  = housesRes.ascmc[1];
+        } else {
+          ascDeg = houses[0];
+          mcDeg  = houses[9];
+        }
+      }
+
+      // --- дом для каждой планеты ---
+      function findHouseFor(longitude) {
+        if (!houses) return null;
+        let lonN = norm(longitude);
+        for (let i=0;i<12;i++){
+          let c1 = norm(houses[i]);
+          let c2 = norm(houses[(i+1)%12]);
+          if (c2 < c1) c2 += 360;
+          let l = lonN;
+          if (l < c1) l += 360;
+          if (l >= c1 && l < c2) return i+1;
+        }
+        return null;
+      }
+
+      positions.forEach(p=>{
+        p.house = findHouseFor(p.long);
+      });
+
+      // --- аспекты ---
+      const aspects = [];
+      for(let i=0;i<positions.length;i++){
+        for(let j=i+1;j<positions.length;j++){
+          const a = aspectBetween(positions[i].long, positions[j].long);
+          if(a) aspects.push({p1:positions[i].name,p2:positions[j].name,name:a.name,delta:a.delta});
+        }
+      }
+
+      renderPositions(positions);
+      renderAspects(aspects);
+      drawWheel(document.getElementById('wheel'), positions, houses);
+      renderHousesTable(houses);
+      renderInterpretations(positions, {houses, ascDeg, mcDeg});
+    });
+  </script>
+</body>
+</html>
