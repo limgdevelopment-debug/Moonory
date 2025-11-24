@@ -1,3 +1,2 @@
 User-agent: *
 Allow: /
-Sitemap: https://yourname.github.io/moonory/sitemap.xml
