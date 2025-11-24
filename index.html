@@ -3,131 +3,186 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Натальная карта онлайн — ваш личный небесный паспорт</title>
-  <meta name="description" content="Бесплатный расчёт натальной карты, совместимости и кратких объяснений. Понятные тексты, аккуратный дизайн, работает на любом устройстве." />
-  <meta name="keywords" content="астрология, натальная карта, натал, зодиак, совместимость, луна, асцендент, дома, планеты" />
-  <meta property="og:title" content="Натальная карта онлайн" />
-  <meta property="og:description" content="Узнайте сильные стороны и ключевые темы жизни по вашей карте рождения." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://example.com" />
-  <meta property="og:image" content="https://example.com/og-image.jpg" />
-
+  <title>Натальная карта онлайн — Moonory</title>
   <style>
-    :root{
-      --bg:#0a0b13;
-      --card:#101221;
-      --muted:#a6adbb;
-      --text:#e8ecf1;
-      --acc:#6ea1ff;
-      --acc2:#c69cff;
-      --ok:#35d49a;
-      --err:#ff6b6b;
-      --radius:18px;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
+    :root{ --bg:#0a0b13; --card:#101221; --muted:#a6adbb; --text:#e8ecf1; --acc:#6ea1ff; --acc2:#c69cff; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
     *{box-sizing:border-box}
-    html,body{
-      margin:0;padding:0;
-      background:
-        radial-gradient(1200px 800px at 80% -10%,rgba(110,161,255,.18),transparent),
-        radial-gradient(900px 600px at 10% 10%,rgba(198,156,255,.12),transparent),
-        var(--bg);
-      color:var(--text);
-      font:16px/1.6 "Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    }
-    a{color:var(--acc)}
-    .container{max-width:1100px;margin:0 auto;padding:24px}
-    header{
-      position:sticky;top:0;
-      background:linear-gradient(180deg,rgba(10,11,19,.9),rgba(10,11,19,.6));
-      backdrop-filter:blur(8px);
-      z-index:100;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      padding:10px 24px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    header h1{font-size:18px;margin:0}
-    .cta{
-      background:linear-gradient(135deg,var(--acc),var(--acc2));
-      border:none;
-      padding:10px 16px;
-      border-radius:12px;
-      color:#061223;
-      font-weight:700;
-      box-shadow:var(--shadow);
-      cursor:pointer;
-      white-space:nowrap;
-    }
+    body{ margin:0; background: radial-gradient(1200px 800px at 80% -10%,rgba(110,161,255,.18),transparent), radial-gradient(900px 600px at 10% 10%,rgba(198,156,255,.12),transparent), var(--bg); color:var(--text); font-family:system-ui, sans-serif; line-height:1.6; }
+    .container{max-width:800px;margin:0 auto;padding:24px}
+    
+    header{ display:flex; justify-content:space-between; align-items:center; padding:20px 0; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:40px; }
+    h1{ font-size:20px; margin:0; }
+    
+    .hero { text-align:center; margin-bottom:40px; }
+    .hero h2 { font-size:32px; margin-bottom:10px; }
+    .hero p { color: var(--muted); }
 
-    .hero{padding:64px 0 32px;display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center}
-    .hero h1{font-size:38px;line-height:1.15;margin:0 0 12px}
-    .hero p{color:var(--muted);margin:0 0 18px}
-    .heroCard{background:linear-gradient(180deg,rgba(16,18,33,.8),rgba(16,18,33,.6));border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+    .card { background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); }
+    
+    /* Сетка формы */
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px; }
+    
+    label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+    input { width:100%; background:#0e1020; border:1px solid rgba(255,255,255,.15); color:white; padding:12px; border-radius:8px; font-size:16px; }
+    .hint { font-size: 11px; color: var(--muted); margin-top: 4px; display: block; }
 
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
-    .card h3{margin:0 0 8px}
-    .muted{color:var(--muted)}
+    .btn-calc { width:100%; background:linear-gradient(135deg,var(--acc),var(--acc2)); border:none; padding:14px; border-radius:12px; color:#061223; font-weight:bold; font-size:16px; cursor:pointer; margin-top: 10px; transition:0.2s; }
+    .btn-calc:hover { opacity:0.9; transform:scale(0.99); }
 
-    .section{padding:40px 0}
-    .section h2{margin:0 0 12px;font-size:26px}
-
-    .form{display:grid;gap:12px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .input, select{background:#0e1020;border:1px solid rgba(255,255,255,.08);color:var(--text);padding:12px;border-radius:12px;outline:none;width:100%}
-    .input::placeholder{color:#7e8696}
-
-    .pill{display:inline-flex;gap:8px;align-items:center;background:#0e1020;border:1px solid rgba(255,255,255,.08);padding:8px 12px;border-radius:999px;color:var(--muted)}
-
-    .result{margin-top:14px;padding:16px;border-radius:14px;background:#0e1020;border:1px dashed rgba(255,255,255,.12)}
-
-    footer{border-top:1px solid rgba(255,255,255,.08);padding:30px 0;color:var(--muted)}
-
-    @media (max-width:900px){
-      .hero{grid-template-columns:1fr}
-      .grid{grid-template-columns:1fr}
-      .row{grid-template-columns:1fr}
-      header{flex-direction:column;align-items:flex-start}
-    }
-
-    /* SVG для карты */
-    .z-wheel text{font-size:10px;fill:var(--muted)}
-    .z-planet{font-weight:700;font-size:12px}
-    .z-sign-label{font-size:12px;font-weight:600}
-
-    /* Таблица позиций */
-    table.z-table{width:100%;border-collapse:collapse;margin-top:12px}
-    .z-table th,.z-table td{border:1px solid rgba(255,255,255,.08);padding:8px;text-align:left}
-    .z-table th{background:#0e1020;color:var(--muted)}
-    .z-kv{font-variant-numeric:tabular-nums}
+    #results-area { display:none; margin-top:30px; animation: fadeIn 0.5s ease; }
+    .asc-block { background: linear-gradient(90deg, rgba(110,161,255,0.1), transparent); padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--acc); }
+    .planet-row { display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .planet-name { font-weight:bold; color:var(--acc); }
+    
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    footer { text-align:center; color:var(--muted); font-size:14px; margin-top:60px; }
   </style>
 
-  <!-- Astronomy Engine -->
   <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Астрология — натальная карта</h1>
-    <button id="btnTopCalc" class="cta">Рассчитать карту</button>
-  </header>
 
   <main class="container">
-    <!-- content trimmed for brevity in this environment -->
-    <!-- In your local project, this will contain the full HTML+JS as we discussed. -->
+    <header>
+      <h1>Moonory</h1>
+    </header>
+
+    <div class="hero">
+      <h2>Калькулятор Натальной Карты</h2>
+      <p>Для точного расчета (Асцендент и Дома) нужны координаты места рождения.</p>
+    </div>
+
+    <div class="card" id="calc-form">
+      <div class="form-grid">
+        <div>
+          <label>Дата рождения</label>
+          <input type="date" id="birthDate" value="1999-10-25">
+        </div>
+        <div>
+          <label>Время рождения</label>
+          <input type="time" id="birthTime" value="17:00">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label>Широта (Latitude)</label>
+          <input type="number" id="lat" placeholder="55.75" value="55.75" step="0.01">
+          <span class="hint">Например: Москва 55.75</span>
+        </div>
+        <div>
+          <label>Долгота (Longitude)</label>
+          <input type="number" id="lng" placeholder="37.61" value="37.61" step="0.01">
+          <span class="hint">Например: Москва 37.61</span>
+        </div>
+      </div>
+      
+      <button class="btn-calc" onclick="calculateNatalChart()">Рассчитать карту</button>
+    </div>
+
+    <div id="results-area" class="card">
+      <div id="ascendant-display" class="asc-block"></div>
+      
+      <h3 style="margin-top:0">Планеты:</h3>
+      <div id="planets-list"></div>
+    </div>
+
   </main>
 
   <footer>
-    <div class="container">
-      <div>© <span id="year"></span> Астрология онлайн. Все права защищены.</div>
-      <div style="margin-top:6px" class="muted">Сделано с любовью к небу и людям.</div>
-    </div>
+    © <span id="year"></span> Moonory Astro.
   </footer>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    const signs = ["Овен", "Телец", "Близнецы", "Рак", "Лев", "Дева", "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"];
+    
+    // Функция для перевода градусов в Знак Зодиака
+    function getZodiacSign(longitude) {
+        let normalized = longitude % 360;
+        if (normalized < 0) normalized += 360;
+        const signIndex = Math.floor(normalized / 30);
+        const degree = normalized % 30;
+        return { name: signs[signIndex], deg: degree };
+    }
+
+    function calculateNatalChart() {
+        const dateVal = document.getElementById('birthDate').value;
+        const timeVal = document.getElementById('birthTime').value;
+        // Получаем координаты как числа
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lng = parseFloat(document.getElementById('lng').value);
+
+        if(!dateVal || !timeVal || isNaN(lat) || isNaN(lng)) {
+            alert("Заполните все поля корректно!");
+            return;
+        }
+
+        const dateObj = new Date(dateVal + 'T' + timeVal);
+        const astroTime = Astronomy.MakeTime(dateObj);
+
+        // --- 1. Расчет Асцендента (ASC) ---
+        // Astronomy Engine не имеет встроенной функции "getAscendant", 
+        // но мы можем посчитать Звездное время (Sidereal Time) и вывести Асцендент математически.
+        
+        // Получаем звездное время по Гринвичу (GMST)
+        const gmst = Astronomy.SiderealTime(astroTime);
+        // Местное звездное время (LST) = GMST + Долгота (в часах)
+        const lstHours = (gmst + lng / 15.0) % 24;
+        const lstDeg = lstHours * 15.0; // переводим в градусы (RAMC)
+
+        // Наклон эклиптики (ось земли)
+        const epsilon = Astronomy.Ecliptic(Astronomy.GeoVector(Astronomy.Body.Sun, astroTime, true)).elat; // Упрощенно, или взять константу ~23.43
+        const epsRad = 23.439 * Math.PI / 180; // Используем стандартное значение
+        
+        const ramcRad = lstDeg * Math.PI / 180;
+        const latRad = lat * Math.PI / 180;
+
+        // Формула Асцендента: tan(Asc) = cos(RAMC) / - (sin(RAMC) * cos(Eps) + tan(Lat) * sin(Eps))
+        // Примечание: Это упрощенная формула, может давать погрешность в полярных широтах, но для Москвы ок.
+        
+        const numerator = Math.cos(ramcRad);
+        const denominator = - (Math.sin(ramcRad) * Math.cos(epsRad) + Math.tan(latRad) * Math.sin(epsRad));
+        
+        let ascRad = Math.atan2(denominator, numerator); // Тут atan2(y, x), но формула выше для cotan, поэтому меняем местами или инвертируем
+        // Правильнее использовать atan2(y, x) для точного квадранта:
+        // y = cos(RAMC)
+        // x = - (sin(RAMC)*cos(e) + tan(lat)*sin(e))
+        // Asc = atan2(y, x)
+        
+        let ascDeg = (Math.atan2(numerator, denominator) * 180 / Math.PI);
+        if (ascDeg < 0) ascDeg += 360;
+        
+        const ascSign = getZodiacSign(ascDeg);
+
+        // Вывод Асцендента
+        const ascDiv = document.getElementById('ascendant-display');
+        ascDiv.innerHTML = `<strong>Асцендент (ASC):</strong> <br> <span style="font-size:24px">${ascSign.name} ${ascSign.deg.toFixed(2)}°</span>`;
+
+
+        // --- 2. Расчет Планет ---
+        const planetsDict = { "Sun": "Солнце", "Moon": "Луна", "Mercury": "Меркурий", "Venus": "Венера", "Mars": "Марс", "Jupiter": "Юпитер", "Saturn": "Сатурн" };
+        
+        let htmlOutput = "";
+        for (const [engName, ruName] of Object.entries(planetsDict)) {
+            const body = Astronomy.Body[engName]; 
+            const vector = Astronomy.GeoVector(body, astroTime, true);
+            const ecliptic = Astronomy.Ecliptic(vector);
+            const pData = getZodiacSign(ecliptic.elon);
+            
+            htmlOutput += `
+                <div class="planet-row">
+                    <span class="planet-name">${ruName}</span>
+                    <span>${pData.name} ${pData.deg.toFixed(1)}°</span>
+                </div>
+            `;
+        }
+
+        document.getElementById('planets-list').innerHTML = htmlOutput;
+        document.getElementById('results-area').style.display = "block";
+        document.getElementById('results-area').scrollIntoView({behavior: "smooth"});
+    }
   </script>
 </body>
 </html>
